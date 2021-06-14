@@ -1,8 +1,7 @@
-#ifndef PID_H
-#define PID_H
+#pragma once
 
 class PID {
- public:
+public:
   /**
    * Constructor
    */
@@ -26,25 +25,24 @@ class PID {
   void UpdateError(double cte);
 
   /**
+  * Return the value.
+  */
+  double GetValue(const double cte, const double timestep) const;
+
+  /**
    * Calculate the total PID error.
    * @output The total PID error
    */
   double TotalError();
 
- private:
+private:
   /**
    * PID Errors
    */
-  double p_error;
-  double i_error;
-  double d_error;
-
-  /**
-   * PID Coefficients
-   */ 
   double Kp;
   double Ki;
   double Kd;
-};
+  double prev_cte;
+  double sum_cte;
 
-#endif  // PID_H
+};
