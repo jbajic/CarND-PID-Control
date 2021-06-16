@@ -1,11 +1,13 @@
 #pragma once
 
+#include <vector>
+
 class PID {
 public:
   /**
    * Constructor
    */
-  PID();
+  PID(double _time_diff);
 
   /**
    * Destructor.
@@ -22,12 +24,17 @@ public:
    * Update the PID error variables given cross track error.
    * @param cte The current cross track error
    */
-  void UpdateError(double cte);
+  void UpdateError(const double cte);
 
   /**
   * Return the value.
   */
-  double GetValue(const double cte, const double timestep) const;
+  double GetValue(const double cte);
+
+  /**
+  * Change parameters
+  */
+  void Twiddle(double cte);
 
   /**
    * Calculate the total PID error.
@@ -35,14 +42,17 @@ public:
    */
   double TotalError();
 
+  bool optimization;
 private:
-  /**
-   * PID Errors
-   */
-  double Kp;
-  double Ki;
-  double Kd;
+  double time_diff;
+  int parameter_index;
+  std::vector<double> parameters;
+  std::vector<double> differences;
+  std::vector<int> parameter_optimization_step;
+
   double prev_cte;
   double sum_cte;
+  double current_err;
+  double best_err;
 
 };

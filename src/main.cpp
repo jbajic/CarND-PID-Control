@@ -1,9 +1,9 @@
-#include <math.h>
-#include <uWS/uWS.h>
-#include <iostream>
-#include <string>
-#include "json.hpp"
 #include "PID.hpp"
+#include "json.hpp"
+#include <iostream>
+#include <math.h>
+#include <string>
+#include <uWS/uWS.h>
 
 // for convenience
 using nlohmann::json;
@@ -15,6 +15,7 @@ double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
 
 constexpr double kTimestep = 0.02;
+constexpr double kSpeedTarget = 30;
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -25,23 +26,29 @@ string hasData(string s) {
   auto b2 = s.find_last_of("]");
   if (found_null != string::npos) {
     return "";
-  }
-  else if (b1 != string::npos && b2 != string::npos) {
+  } else if (b1 != string::npos && b2 != string::npos) {
     return s.substr(b1, b2 - b1 + 1);
   }
   return "";
 }
 
+double FitIntoBoundaries(double value, double low = -1.0, double high = 1.0) {
+  if (value > high)
+    return high;
+  if (value < low)
+    return low;
+  return value;
+}
+
 int main() {
   uWS::Hub h;
 
-  PID pid;
-  pid.Init(0.5, 0.5, 0.5);
-  double prev_cte{0};
-  double sum_cte{0};
+  PID steering_pid(kTimestep), throttle_pid(kTimestep);
+  steering_pid.Init(0.13,0.00,7.89);
+  throttle_pid.Init(0.01, 0.0002, 0.02);
 
-  h.onMessage([&pid, &prev_cte, &sum_cte](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
-                     uWS::OpCode opCode) {
+  h.onMessage([&steering_pid, &throttle_pid](uWS::WebSocket<uWS::SERVER> ws, char *data,
+                                   size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -58,34 +65,36 @@ int main() {
           double cte = std::stod(j[1]["cte"].get<string>());
           double speed = std::stod(j[1]["speed"].get<string>());
           double angle = std::stod(j[1]["steering_angle"].get<string>());
-          double steer_value;
+          double steer_value{0}, throttle_value{0};
           /**
            * TODO: Calculate steering value here, remember the steering value is
            *   [-1, 1].
            * NOTE: Feel free to play around with the throttle and speed.
            *   Maybe use another PID controller to control the speed!
            */
-          steer_value = pid.GetValue(cte, kTimestep);
-          prev_cte = cte;
-          sum_cte += cte;
+          steering_pid.UpdateError(cte);
+          throttle_pid.UpdateError(cte);
+
+          steer_value = FitIntoBoundaries(steering_pid.GetValue(cte));
+          // throttle_value = throttle_pid(steering_pid.GetValue(cte));
+
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value
-                    << std::endl;
+                    << ", throttle: " << throttle_value << "\n";
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["speed"] = 50;
           msgJson["throttle"] = 0.3;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-        }  // end "telemetry" if
+        } // end "telemetry" if
       } else {
         // Manual driving
         string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }
-    }  // end websocket message if
+    } // end websocket message if
   }); // end h.onMessage
 
   h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
