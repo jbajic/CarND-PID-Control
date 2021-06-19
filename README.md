@@ -26,7 +26,6 @@ Self-Driving Car Engineer Nanodegree Program
     Some function signatures have changed in v0.14.x. See [this PR](https://github.com/udacity/CarND-MPC-Project/pull/3) for more details.
 * Simulator. You can download these from the [project intro page](https://github.com/udacity/self-driving-car-sim/releases) in the classroom.
 
-Fellow students have put together a guide to Windows set-up for the project [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/files/Kidnapped_Vehicle_Windows_Setup.pdf) if the environment you have set up for the Sensor Fusion projects does not work for this project. There's also an experimental patch for windows in this [PR](https://github.com/udacity/CarND-PID-Control-Project/pull/3).
 
 ## Basic Build Instructions
 
@@ -35,64 +34,33 @@ Fellow students have put together a guide to Windows set-up for the project [her
 3. Compile: `cmake .. && make`
 4. Run it: `./pid`. 
 
-Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
+## Project
 
-## Editor Settings
+This project uses PID controller for steering and throttle to drive a car around the track.
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+The PID controller consists of three components:
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+ - P => proportional component
+ - I => integral component
+ - D => derivative component
 
-## Code Style
+Each of the components has a gain which says how it is calculated:
+ - `Kp` => proportional gain
+ - `Ki` => integral gain
+ - `Kd` => derivative gain
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+And the error is presented as CTE (cross-track error) which is given to us by the simulator and its being used in PID for steering,, while the difference between desired speed and the current is being used for throttle controller.
 
-## Project Instructions and Rubric
+Both steering and throttle PID are working with PID formula:
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+`value(t) = -Kp * CTE - Kd * (CTE - CTE_prev) / dt - Ki*CTE_sum`
 
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
+where CTE_prev is cte from previous step and CTE_sum is a sum of all CTE so far.
 
-## Hints!
+The final parameters were chosen by manual tuning and there are:
+| PID controller | Kp | Kd | Ki |
+| -------------- | -- | -- | -- |
+| Steering | 0.15 | 0.00005 | 3.45 |
+| Throttle | 0.1 | 0.0015 | 0.00001 |
 
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
+The problem with twiddling or any optimization algorithm is having a clean run. I believe an attempt could be made by automatically finding these parameters but a better way of starting the simulation has to be found.
