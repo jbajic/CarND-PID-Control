@@ -15,7 +15,7 @@ double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
 
 constexpr double kTimestep = 0.02;
-constexpr double kSpeedTarget = 30;
+constexpr double kSpeedTarget = 50;
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -44,7 +44,7 @@ int main() {
   uWS::Hub h;
 
   PID steering_pid(kTimestep), throttle_pid(kTimestep);
-  steering_pid.Init(0.13,0.00,7.89);
+  steering_pid.Init(0.005,2,3.5);
   throttle_pid.Init(0.01, 0.0002, 0.02);
 
   h.onMessage([&steering_pid, &throttle_pid](uWS::WebSocket<uWS::SERVER> ws, char *data,

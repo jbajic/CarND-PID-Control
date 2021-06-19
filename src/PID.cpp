@@ -36,10 +36,34 @@ double PID::GetValue(const double cte) {
 
 void PID::Twiddle(double cte) {
   if(parameter_optimization_step[parameter_index] == 0) {
-    parameters[parameter_index]] += differences[parameter_index];
+    parameters[parameter_index] += differences[parameter_index];
     parameter_optimization_step[parameter_index] = 1;
+    return ;
   } else if(parameter_optimization_step[parameter_index] == 1) {
-    parameters[parameter_index]] *= differences[parameter_index];
+    if(cte < best_err) {
+      best_err = cte;
+      differences[parameter_index] *= 1.1;
+      parameter_optimization_step[parameter_index] = 0;
+      parameter_index = (parameter_index + 1) % 3;
+      Twiddle(cte);
+      return;
+    } else {
+      parameters[parameter_index] -= 2* differences[parameter_index];
+      parameter_optimization_step[parameter_index] = 2;
+      return;
+    }
+  } else if (parameter_optimization_step[parameter_index] == 2){
+    if(cte < best_err) {
+      best_err = cte;
+      differences[parameter_index] *= 1.1;
+    } else {
+      parameters[parameter_index] += differences[parameter_index];
+      differences[parameter_index] *= 0.9;
+    }
+    parameter_optimization_step[parameter_index] = 0;
+    parameter_index = (parameter_index + 1) % 3;
+    Twiddle(cte);
+    return;
   }
 }
 
