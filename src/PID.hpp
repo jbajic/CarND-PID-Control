@@ -5,7 +5,7 @@ public:
   /**
    * Constructor
    */
-  PID();
+  PID(const double _dt);
 
   /**
    * Destructor.
@@ -27,7 +27,7 @@ public:
   /**
   * Return the value.
   */
-  double GetValue(const double cte, const double timestep) const;
+  double GetValue(const double cte) const;
 
   /**
    * Calculate the total PID error.
@@ -44,5 +44,7 @@ private:
   double Kd;
   double prev_cte;
   double sum_cte;
+
+  double dt;
 
 };

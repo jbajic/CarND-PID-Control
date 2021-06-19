@@ -4,7 +4,7 @@
  * TODO: Complete the PID class. You may add any additional desired functions.
  */
 
-PID::PID() {}
+PID::PID(const double _dt): dt{_dt} {}
 
 PID::~PID() {}
 
@@ -22,8 +22,8 @@ void PID::UpdateError(double cte) {
   sum_cte += cte;
 }
 
-double PID::GetValue(const double cte, const double timestep) const{
-  return -Kp * cte - ((cte - prev_cte) / 0.02) *Kd - sum_cte*Ki;
+double PID::GetValue(const double cte) const{
+  return -Kp * cte - ((cte - prev_cte) / dt) * Kd - sum_cte * Ki;
 }
 
 double PID::TotalError() {
